@@ -66,6 +66,7 @@ def jumbo_extract(driver):
     main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
     
     def extract_mainbox(main_box):
+        time.sleep(random.uniform(2.0, 2.5))
         for detail in main_box:
             nombre = detail.find_element(By.CLASS_NAME, 'vtex-product-summary-2-x-productBrand').text
             try:
@@ -79,13 +80,16 @@ def jumbo_extract(driver):
             main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Jumbo'})
     
     extract_mainbox(main_box)
+
+    try:
+        click_button = wait.until(EC.visibility_of_element_located((By.XPATH ,'//button[text()="2"]')))
     
-    wait.until(EC.element_to_be_clickable((By.XPATH ,'//button[text()="2"]')))
-    time.sleep(random.uniform(3.0, 4.5))
-    
-    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
-    extract_mainbox(main_box)
-    
+        if click_button.is_displayed():
+            element.click()
+            extract_mainbox(main_box)
+    except:
+        pass
+
     df = pd.DataFrame(main_list)
     df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
     print(f'{len(df)} {df.Store[0]} items was extracted')
@@ -141,7 +145,7 @@ def olimpica_extract(driver):
     driver.quit()
     
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
+    #df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
     driver.quit()
     print(f'{len(df)} {df.Store[0]} items was extracted')
     return df
