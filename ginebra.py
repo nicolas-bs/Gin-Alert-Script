@@ -145,7 +145,7 @@ def olimpica_extract(driver):
     driver.quit()
     
     df = pd.DataFrame(main_list)
-    #df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
+    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
     driver.quit()
     print(f'{len(df)} {df.Store[0]} items was extracted')
     return df
