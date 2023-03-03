@@ -1,16 +1,15 @@
 """
 This email script alert aims to verify discount gins within three different Retail Stores in Colombia: Jumbo, Merquo, Carulla
 """
-
 #! /usr/bin/python3
 
 # Basic Libraries
 import pandas as pd
-import numpy as np
-import random
+import random   
 import requests, re
 import sys, os
 import time
+
 
 # Selenium Library
 from time import sleep
@@ -48,25 +47,21 @@ def get_driver():
     return driver
 
 # Jumbo
-    
 def jumbo_extract(driver):
     driver.get('https://www.tiendasjumbo.co')
     wait = WebDriverWait(driver, 40)
     action = ActionChains(driver)
-    element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'tiendasjumboqaio-jumbo-custom-pages-2-x-sliderRightArrow')))
-    action.click(on_element = element)
-    action.perform()
+    action.click(on_element  = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'tiendasjumboqaio-jumbo-custom-pages-2-x-sliderRightArrow')))).perform()
 
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]'))).click()
     
-    time.sleep(random.uniform(2.0, 2.5))
+    time.sleep(random.uniform(2.0, 3.5))
     
     main_list = []
-    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
+    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
     
     def extract_mainbox(main_box):
-        time.sleep(random.uniform(2.0, 2.5))
         for detail in main_box:
             nombre = detail.find_element(By.CLASS_NAME, 'vtex-product-summary-2-x-productBrand').text
             try:
@@ -76,8 +71,9 @@ def jumbo_extract(driver):
             try:
                 descuento = detail.find_element(By.CLASS_NAME, "tiendasjumboqaio-jumbo-minicart-2-x-containerPercentageFlag").text
             except:
-                descuento = np.nan
+                descuento = float('nan')
             main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Jumbo'})
+            time.sleep(random.uniform(1.0, 1.5))
     
     extract_mainbox(main_box)
 
@@ -85,19 +81,18 @@ def jumbo_extract(driver):
         click_button = wait.until(EC.visibility_of_element_located((By.XPATH ,'//button[text()="2"]')))
     
         if click_button.is_displayed():
-            element.click()
+            click_button.click()
             extract_mainbox(main_box)
     except:
         pass
 
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
+    df['Descuento'].apply(lambda x: str(x).replace(' ', '') if not pd.isna(x) else float('nan'))
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.quit()
     return df
 
 # Olimpica
-
 def olimpica_extract(driver):
     driver.get('https://www.olimpica.com/')
     wait = WebDriverWait(driver, 30)
@@ -110,10 +105,9 @@ def olimpica_extract(driver):
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ciudad"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Bogotá")]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[8]/div/div/div[3]/div/span[2]/button'))).click()
-    time.sleep(random.uniform(2.0, 3.5))
-    action.click(on_element = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div/div[1]/div/div[2]/div/div[2]/div/div[2]/div')))).perform()
-    action.click(on_element = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[5]/div/div[2]/nav/ul/div[2]/div/a[1]/div')))).perform()
     
+    time.sleep(random.uniform(2.0, 3.5))
+    action.click(on_element = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div/div[1]/div/div[3]/div/div[2]/div/div')))).perform()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Licores"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Sub-Categoría"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//label[text()="Ginebra"]'))).click()
@@ -121,69 +115,65 @@ def olimpica_extract(driver):
     driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
     
     main_list = []
-    main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
+    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
     
-    time.sleep(random.uniform(2.0, 3.5))
+    
     for detail in main_box:
-        
         nombre = detail.find_element(By.CLASS_NAME, 'vtex-product-summary-2-x-productBrand').text
 
         try:
             precio =  detail.find_element(By.CLASS_NAME, 'flex items-center').text
-        except:
+        except IndexError:
             precio =  detail.find_element(By.CLASS_NAME, 'vtex-product-price-1-x-sellingPrice--hasListPrice--dynamicF').text
 
         try:
             descuento = detail.find_element(By.CLASS_NAME, "olimpica-dinamic-flags-0-x-containerPercentageFlagDcto").text
 
-        except:
-            descuento = np.nan
+        except NoSuchElementException:
+            descuento = float('nan')
 
         main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Olimpica'})
+        time.sleep(random.uniform(1.0, 1.5))
     
     
     driver.quit()
     
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
+    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else float('nan'))
     driver.quit()
     print(f'{len(df)} {df.Store[0]} items was extracted')
     return df
 
 # Merqueo
-
 def merqueo_extract(driver):
-    
     wait = WebDriverWait(driver, 50)
     driver.get('https://merqueo.com/bogota/super-ahorro/licores/ginebra')
-    sleep(random.uniform(2., 2.5))
+    time.sleep(random.uniform(2.0, 3.5))
     
     main_list = []
     main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME,"mq-product-card")))
-    time.sleep(random.uniform(2.0, 2.5))
-
     
     for detail in main_box:
-        
+        time.sleep(random.uniform(2.0, 2.5))      
         nombre = detail.find_element(By.CLASS_NAME, 'mq-product-title').text
         precio = detail.find_element(By.CLASS_NAME, 'mq-product-price').text
 
         try:
             descuento = detail.find_element(By.CLASS_NAME, "mq-percent-discount").text
 
-        except:
-            descuento = np.nan
+        except NoSuchElementException:
+            descuento = float('nan')
 
         main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Merqueo'})
+        time.sleep(random.uniform(1.0, 1.5))
         
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else np.nan)
+    df['Descuento'] = df['Descuento'].apply(lambda x: ('-' + x[0] + '%') if not pd.isna(x) else float('nan'))
     print(f'{len(main_list)} {df.Store[0]} items was extracted')
     driver.quit()
     return df
 
 # Carulla - Extacting the information by slicing (Price)
-
 def carulla_extract(driver):
     driver.get('https://cava.carulla.com/vinos-y-licores/ginebra')
     wait = WebDriverWait(driver, 50)
@@ -192,7 +182,7 @@ def carulla_extract(driver):
     
     while 1:
         try:
-            time.sleep(random.uniform(3, 3.5))
+            time.sleep(random.uniform(2.0,2.5))
             next_page1 = wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mostrar más"]')))
             next_page1.click()
             
@@ -209,19 +199,20 @@ def carulla_extract(driver):
         
         try:
             precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[2].text
-        except:
+        except IndexError:
             precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[1].text
             
         try:
             descuento = detail.find_element(By.CLASS_NAME, "exito-vtex-components-4-x-badgeDiscount").text
 
-        except:
-            descuento = np.nan
+        except NoSuchElementException:
+            descuento = float('nan')
 
-        main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Carulla'})         
+        main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Carulla'})
+        time.sleep(random.uniform(1.0, 1.5))         
     
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: (x.str[0] + x.str[1:]) if not pd.isna(x) else np.nan)
+    df['Descuento'] = df['Descuento'].apply(lambda x: (x.str[0] + x.str[1:]) if not pd.isna(x) else float('nan'))
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.close()
     return df
