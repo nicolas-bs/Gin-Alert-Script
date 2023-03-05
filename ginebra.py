@@ -42,7 +42,7 @@ def get_driver():
     option.binary_location = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
     option.add_argument('--start-maximized')
     option.add_argument("--window-size=1920,1080")
-    #option.add_argument("--headless=new")
+    option.add_argument("--headless=new")
     driverService = Service('/Users/nicolasbenavides/Downloads/chromedriver')
     driver = webdriver.Chrome(service=driverService, options=option)
     print('Instance Created')
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     df_full = pd.concat([df_1, df_2, df_3, df_4, df_5], axis=0, ignore_index=True)
     df_full['Precio'] = df_full['Precio'].astype('str') \
                                          .str.extractall('(\d+)') \
-                                         .unstack().sum(axis=1).astype(int) \
+                                         .unstack().sum(axis=1).astype(float) \
 
     df_sale = df_full.query('Descuento.notnull()') \
                      .reset_index(drop=True) \
