@@ -4,9 +4,10 @@ This email script alert aims to verify discount gins within three different Reta
 #! /usr/bin/python3
 import pandas as pd
 pd.options.display.float_format = "{:,.0f}".format
-import random   
-import sys, os
 import time
+from time import sleep
+import random
+import sys, os
 
 # Selenium Library
 from selenium import webdriver
@@ -31,10 +32,19 @@ import smtplib, ssl
 def get_driver():
     option = webdriver.ChromeOptions()
     option.binary_location = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    option.add_argument('--no-sandbox')
     option.add_argument('--start-maximized')
-    option.add_argument("--window-size=1920,1080")
+    option.add_argument('--disable-dev-shm-usage')
+    option.add_argument('--disable-gpu')
+    option.add_argument('--disable-dev-tools')
+    option.add_argument("--disable-extensions")
+    option.add_argument('--no-zygote')
+    option.add_argument("--disable-notifications")
+    option.add_argument('--v=99')
     option.add_argument("--headless=new")
-    driver_service = Service(ChromeDriverManager().install())
+
+    #driver_service = Service(ChromeDriverManager().install())
+    driver_service = Service('/Users/nicolasbenavides/Downloads/chromedriver')
     driver = webdriver.Chrome(service=driver_service, options=option)
     print('Selenium driver instance created')
     return driver
@@ -47,33 +57,36 @@ def exito_extract(driver):
     action = ActionChains(driver)
     
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mercado"]'))).click()
-    time.sleep(random.uniform(1.5, 2))
+    sleep(random.uniform(1.5, 2))
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Licores"]'))).click()
     action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
-    time.sleep(random.uniform(1.5, 2))
+    sleep(random.uniform(1.5, 2))
     action.click(wait.until(EC.presence_of_element_located((By.XPATH, '//div[text()="Sub-categoría"]')))).perform()
-    time.sleep(random.uniform(1.5, 2))
+    sleep(random.uniform(1.5, 2))
     action.click(wait.until(EC.presence_of_element_located((By.ID, 'category-3-ginebra')))).perform()
 
     for _ in range(2):
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
+        sleep(random.uniform(2, 3))
+        driver.execute_script("window.scrollBy(0, 400);")
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mostrar más"]')))).perform()
-        driver.execute_script("window.scrollBy(0, 700);")
-        time.sleep(random.uniform(2, 2.3))
+        sleep(random.uniform(2, 3))
+        main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
    
     main_list = []
-    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
    
     for detail in main_box: 
         nombre = detail.find_element(By.CLASS_NAME, "vtex-store-components-3-x-productBrand ").text
-        try:
-            precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[2].text
-        except IndexError:
-            precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[1].text
-            
+        
+        precio_elements = detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")
+        
+        if len(precio_elements) == 4:
+            precio = precio_elements[3].text
+        else:
+            precio = precio_elements[2].text
+        
         try:
             descuento = detail.find_element(By.CLASS_NAME, "exito-vtex-components-4-x-badgeDiscount").text
-
         except NoSuchElementException:
             descuento = float('nan')
 
@@ -91,42 +104,42 @@ def jumbo_extract(driver):
     wait = WebDriverWait(driver, 40)
     action = ActionChains(driver)
     action.click(on_element  = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'tiendasjumboqaio-jumbo-custom-pages-2-x-sliderRightArrow')))).perform()
-
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]'))).click()
     
-    for _ in range(2):
-        driver.execute_script("window.scrollBy(0, 1000);")
-        time.sleep(random.uniform(2, 2.3))
+    for _ in range(4):
+        driver.execute_script("window.scrollBy(0, 350);")
+        main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
+        sleep(random.uniform(2, 2.5))
     
     main_list = []
-    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
-    
     def extract_mainbox(main_box):
+        
         for detail in main_box:
             nombre = detail.find_element(By.CLASS_NAME, 'vtex-product-summary-2-x-productBrand').text
-            try:
-                precio = detail.find_elements(By.CLASS_NAME, 'tiendasjumboqaio-jumbo-minicart-2-x-price')[1].text
-            except IndexError:
-                precio = detail.find_element(By.CLASS_NAME, 'tiendasjumboqaio-jumbo-minicart-2-x-price').text
+                
+            precio_element = detail.find_elements(By.CLASS_NAME, 'tiendasjumboqaio-jumbo-minicart-2-x-price')
+            if len(precio_element) == 2:
+                    precio = precio_element[1].text
+            else:
+                precio = precio_element[0].text             
             try:
                 descuento = detail.find_element(By.CLASS_NAME, "tiendasjumboqaio-jumbo-minicart-2-x-containerPercentageFlag").text
             except NoSuchElementException:
-                descuento = float('nan')
-            
+                    descuento = float('nan')
+                
             main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Jumbo'})
-    
-    extract_mainbox(main_box)
-    time.sleep(random.uniform(1, 2))
 
+    extract_mainbox(main_box)
+    sleep(random.uniform(2, 2.4))
+    
     try:
-        click_button = wait.until(EC.visibility_of_element_located((By.XPATH ,'//button[text()="2"]')))
-        if click_button.is_displayed():
-            click_button.click()
-            time.sleep(random.uniform(2, 3))
-            extract_mainbox(main_box)
-    except:
-        pass
+        wait.until(EC.visibility_of_element_located((By.XPATH ,'//button[text()="2"]'))).click()
+        sleep(random.uniform(2, 2.4))
+        main_box= wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
+        extract_mainbox(main_box)
+    except NoSuchElementException:
+         pass
 
     df = pd.DataFrame(main_list)
     df = df.drop_duplicates(subset=['Nombre'])
@@ -144,25 +157,25 @@ def olimpica_extract(driver):
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Departamento"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "BOGO")]'))).click()
     
-    time.sleep(random.uniform(2.0, 3.5))
+    sleep(random.uniform(2.0, 3.5))
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ciudad"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Bogotá")]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[8]/div/div/div[3]/div/span[2]/button'))).click()
     
-    time.sleep(random.uniform(2.0, 3.5))
+    sleep(random.uniform(2.0, 3.5))
     action.click(on_element = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div/div[1]/div/div[3]/div/div[2]/div/div')))).perform()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Licores"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Sub-Categoría"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//label[text()="Ginebra"]'))).click()
-    time.sleep(random.uniform(2.0, 3.5))
+    sleep(random.uniform(2.0, 3.5))
 
-    for _ in range(2):
+    for _ in range(3):
         driver.execute_script("window.scrollBy(0, 700);")
-        time.sleep(random.uniform(2, 2.5))
+        sleep(random.uniform(3, 3.5))
+        main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
     
     main_list = []
-    main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
-    time.sleep(random.uniform(2.0, 3.5))
+    sleep(random.uniform(2.0, 3.5))
     
     for detail in main_box:  
         nombre = detail.find_element(By.CLASS_NAME,  'vtex-product-summary-2-x-productBrand').text
@@ -184,7 +197,7 @@ def olimpica_extract(driver):
 def merqueo_extract(driver):
     wait = WebDriverWait(driver, 50)
     driver.get('https://merqueo.com/bogota/super-ahorro/licores/ginebra')
-    time.sleep(random.uniform(2.0, 3.5))
+    sleep(random.uniform(2.0, 3.5))
     
     main_list = []
     main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME,"mq-product-card")))
@@ -217,23 +230,21 @@ def carulla_extract(driver):
     for _ in range(2):
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mostrar más"]')))).perform()
-        driver.execute_script("window.scrollBy(0, 500);")
-        time.sleep(random.uniform(1.6, 2.3))
+        driver.execute_script("window.scrollBy(0, 300);")
+        main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
+        sleep(random.uniform(2, 2.5))
         
     main_list = []
-    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
-   
     for detail in main_box:
-        nombre = detail.find_element(By.CLASS_NAME, "vtex-product-summary-2-x-productBrand").text
-        
-        try:
-            precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[2].text
-        except IndexError:
-            precio =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")[1].text
-            
+        nombre = detail.find_element(By.CLASS_NAME, "vtex-product-summary-2-x-productBrand").text 
+      
+        precio_element =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")
+        if len(precio_element) == 3:
+            precio = precio_element[2].text
+        else:
+            precio = precio_element[1].text
         try:
             descuento = detail.find_element(By.CLASS_NAME, "exito-vtex-components-4-x-badgeDiscount").text
-
         except NoSuchElementException:
             descuento = float('nan')
 
@@ -285,7 +296,7 @@ if __name__ == "__main__":
                     .reset_index(drop=True)
     
     # Send Email
-    email_sender = os.environ.get("USER")
+    email_sender = os.environ.get("EMAIL")
     email_password = os.environ.get("PASSWORD")
 
     msg = MIMEMultipart()
