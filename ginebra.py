@@ -34,13 +34,7 @@ def get_driver():
     option.binary_location = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
     option.add_argument('--no-sandbox')
     option.add_argument('--start-maximized')
-    option.add_argument('--disable-dev-shm-usage')
-    option.add_argument('--disable-gpu')
-    option.add_argument('--disable-dev-tools')
-    option.add_argument("--disable-extensions")
-    option.add_argument('--no-zygote')
     option.add_argument("--disable-notifications")
-    option.add_argument('--v=99')
     option.add_argument("--headless=new")
 
     #driver_service = Service(ChromeDriverManager().install())
@@ -56,19 +50,20 @@ def exito_extract(driver):
     wait = WebDriverWait(driver, 60)
     action = ActionChains(driver)
     
-    wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mercado"]'))).click()
+    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mercado"]')))).perform()
     sleep(random.uniform(1.5, 2))
-    wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Licores"]'))).click()
+    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Licores"]')))).perform()
+    sleep(random.uniform(1.5, 2))
     action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
     sleep(random.uniform(1.5, 2))
     action.click(wait.until(EC.presence_of_element_located((By.XPATH, '//div[text()="Sub-categoría"]')))).perform()
     sleep(random.uniform(1.5, 2))
     action.click(wait.until(EC.presence_of_element_located((By.ID, 'category-3-ginebra')))).perform()
+    sleep(random.uniform(2, 3))
 
     for _ in range(2):
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
-        sleep(random.uniform(2, 3))
-        driver.execute_script("window.scrollBy(0, 400);")
+        driver.execute_script("window.scrollBy(0, 900);")
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mostrar más"]')))).perform()
         sleep(random.uniform(2, 3))
         main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
@@ -104,13 +99,13 @@ def jumbo_extract(driver):
     wait = WebDriverWait(driver, 40)
     action = ActionChains(driver)
     action.click(on_element  = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'tiendasjumboqaio-jumbo-custom-pages-2-x-sliderRightArrow')))).perform()
-    wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]'))).click()
-    wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]'))).click()
+    action.click(on_element=wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]')))).perform()
+    action.click(on_element=wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]')))).perform()
     
-    for _ in range(4):
-        driver.execute_script("window.scrollBy(0, 350);")
-        main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
-        sleep(random.uniform(2, 2.5))
+    for _ in range(6):
+        driver.execute_script("window.scrollBy(0, 400);")
+        sleep(random.uniform(2, 2.3))
+    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
     
     main_list = []
     def extract_mainbox(main_box):
@@ -129,7 +124,7 @@ def jumbo_extract(driver):
                     descuento = float('nan')
                 
             main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Jumbo'})
-
+            
     extract_mainbox(main_box)
     sleep(random.uniform(2, 2.4))
     
@@ -138,17 +133,16 @@ def jumbo_extract(driver):
         sleep(random.uniform(2, 2.4))
         main_box= wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-product-summary-2-x-container")))
         extract_mainbox(main_box)
-    except NoSuchElementException:
+    except:
          pass
-
+    
     df = pd.DataFrame(main_list)
-    df = df.drop_duplicates(subset=['Nombre'])
+    df = df.drop_duplicates()
     df['Descuento'] = df['Descuento'].str.replace(' ', '', regex=True)
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.quit()
     return df
 
-# Olimpica
 def olimpica_extract(driver):
     driver.get('https://www.olimpica.com/')
     wait = WebDriverWait(driver, 30)
@@ -157,26 +151,25 @@ def olimpica_extract(driver):
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Departamento"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "BOGO")]'))).click()
     
-    sleep(random.uniform(2.0, 3.5))
+    time.sleep(random.uniform(2.0, 3.5))
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ciudad"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Bogotá")]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[8]/div/div/div[3]/div/span[2]/button'))).click()
     
-    sleep(random.uniform(2.0, 3.5))
+    time.sleep(random.uniform(2.0, 3.5))
     action.click(on_element = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div/div[1]/div/div[3]/div/div[2]/div/div')))).perform()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Licores"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Sub-Categoría"]'))).click()
     wait.until(EC.element_to_be_clickable((By.XPATH, '//label[text()="Ginebra"]'))).click()
-    sleep(random.uniform(2.0, 3.5))
+    time.sleep(random.uniform(2.0, 3.5))
 
-    for _ in range(3):
-        driver.execute_script("window.scrollBy(0, 700);")
-        sleep(random.uniform(3, 3.5))
-        main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
+    for _ in range(4):
+        driver.execute_script("window.scrollBy(0, 400);")
+        time.sleep(random.uniform(2, 2.5))
+    main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
+    print(len(main_box))
     
     main_list = []
-    sleep(random.uniform(2.0, 3.5))
-    
     for detail in main_box:  
         nombre = detail.find_element(By.CLASS_NAME,  'vtex-product-summary-2-x-productBrand').text
         precio =  detail.find_element(By.CLASS_NAME, 'vtex-product-price-1-x-sellingPrice--hasListPrice--dynamicF').text
@@ -196,8 +189,13 @@ def olimpica_extract(driver):
 # Merqueo
 def merqueo_extract(driver):
     wait = WebDriverWait(driver, 50)
+    action = ActionChains(driver)
     driver.get('https://merqueo.com/bogota/super-ahorro/licores/ginebra')
-    sleep(random.uniform(2.0, 3.5))
+    time.sleep(random.uniform(2.0, 3.5))
+
+    for _ in range(2):
+        driver.execute_script("window.scrollBy(0, 450);")
+        time.sleep(random.uniform(1.5, 2))
     
     main_list = []
     main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME,"mq-product-card")))
@@ -230,15 +228,16 @@ def carulla_extract(driver):
     for _ in range(2):
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'exito-geolocation-3-x-cursorPointer')))).perform()
         action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mostrar más"]')))).perform()
-        driver.execute_script("window.scrollBy(0, 300);")
-        main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
-        sleep(random.uniform(2, 2.5))
+        driver.execute_script("window.scrollBy(0, 450);")
+        time.sleep(random.uniform(2, 2.5))
+    main_box = wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "vtex-search-result-3-x-galleryItem")))
         
     main_list = []
     for detail in main_box:
         nombre = detail.find_element(By.CLASS_NAME, "vtex-product-summary-2-x-productBrand").text 
       
         precio_element =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")
+        print(len(precio_element))
         if len(precio_element) == 3:
             precio = precio_element[2].text
         else:
@@ -255,6 +254,7 @@ def carulla_extract(driver):
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.close()
     return df
+
     
 if __name__ == "__main__":
     email_receiver = sys.argv[1]
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     data = jumbo_extract(driver)
     df_1 = data
 
-    #Olimpica Retail
+    # Olimpica Retail
     driver = get_driver()
     data = olimpica_extract(driver)
     df_2 = data
