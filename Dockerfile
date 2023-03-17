@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 
 
 # Install chromedriver
-RUN wget -N https://chromedriver.storage.googleapis.com/72.0.3626.69/chromedriver_linux64.zip -P ~/
+RUN wget -N https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip -P ~/
 RUN unzip ~/chromedriver_linux64.zip -d ~/
 RUN rm ~/chromedriver_linux64.zip
 RUN mv -f ~/chromedriver /usr/local/bin/chromedriver
