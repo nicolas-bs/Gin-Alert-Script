@@ -1,0 +1,5 @@
+ pandas 
+ selenium 
+ pretty_html_table 
+ webdriver_manager 
+ python-dotenv
