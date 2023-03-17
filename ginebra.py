@@ -40,6 +40,8 @@ def get_driver():
     options.add_argument("--disable-notifications")
     options.add_argument('--disable-cache')
     options.add_argument("--headless=new")
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    options.add_experimental_option("prefs", prefs)
 
     #driver_service = Service(ChromeDriverManager().install())
     #driver_service = Service('/Users/nicolasbenavides/Downloads/chromedriver')
@@ -54,8 +56,8 @@ def jumbo_extract(driver):
     wait = WebDriverWait(driver, 40)
     action = ActionChains(driver)
     action.click(on_element  = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'tiendasjumboqaio-jumbo-custom-pages-2-x-sliderRightArrow')))).perform()
-    action.click(on_element=wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]')))).perform()
-    action.click(on_element=wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]')))).perform()
+    action.click(wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Vinos y licores"]')))).perform()
+    action.click(wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Ginebras"]')))).perform()
     
     for _ in range(6):
         driver.execute_script("window.scrollBy(0, 400);")
@@ -69,10 +71,10 @@ def jumbo_extract(driver):
             nombre = detail.find_element(By.CLASS_NAME, 'vtex-product-summary-2-x-productBrand').text
                 
             precio_element = detail.find_elements(By.CLASS_NAME, 'tiendasjumboqaio-jumbo-minicart-2-x-price')
-            if len(precio_element) > 2:
-                    precio = precio_element[2].text
+            if len(precio_element) > 1:
+                    precio = precio_element[1].text
             else:
-                precio = precio_element[1].text             
+                precio = precio_element[0].text             
             try:
                 descuento = detail.find_element(By.CLASS_NAME, "tiendasjumboqaio-jumbo-minicart-2-x-containerPercentageFlag").text
             except NoSuchElementException:
@@ -118,11 +120,12 @@ def olimpica_extract(driver):
     wait.until(EC.element_to_be_clickable((By.XPATH, '//label[text()="Ginebra"]'))).click()
     sleep(random.uniform(2.0, 3.5))
 
-    for _ in range(5):
+    for _ in range(3):
         driver.execute_script("window.scrollBy(0, 400);")
         sleep(random.uniform(2, 2.5))
     main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
     
+    sleep(random.uniform(2.0, 3.5))
     main_list = []
     for detail in main_box:  
         nombre = detail.find_element(By.CLASS_NAME,  'vtex-product-summary-2-x-productBrand').text
@@ -180,17 +183,18 @@ def carulla_extract(driver):
     
     sleep(random.uniform(1,2))
     action.click(wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Sí"]')))).perform()
+    sleep(random.uniform(1,2))
     action.click(wait.until(EC.element_to_be_clickable((By.XPATH, '//span[text()="Ginebras"]')))).perform()
     new_window = driver.window_handles[-1]  # Get the latest window handle
     driver.close()
     driver.switch_to.window(new_window)
 
-    action.click(on_element=wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[0]).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Bogotá, D.c."]')))).perform()
+    action.click(wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[0]).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Bogotá, D.c."]')))).perform()
     sleep(random.uniform(1,2))
-    action.click(on_element=wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[1]).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH,  '//div[contains(text(), "102")]')))).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Confirmar"]')))).perform()
+    action.click(wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[1]).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH,  '//div[contains(text(), "102")]')))).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Confirmar"]')))).perform()
     sleep(random.uniform(2,3))
     
     for _ in range(2):
@@ -236,20 +240,20 @@ def exito_extract(driver):
     wait = WebDriverWait(driver, 60)
     action = ActionChains(driver)
     sleep(random.uniform(1,2))
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mercado"]')))).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Mercado"]')))).perform()
     sleep(random.uniform(1,2))
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Licores"]')))).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Licores"]')))).perform()
     sleep(random.uniform(1,2))
-    action.click(on_element=wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[0]).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Bogotá, D.c."]')))).perform()
+    action.click(wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[0]).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[text()="Bogotá, D.c."]')))).perform()
     sleep(random.uniform(1,2))
-    action.click(on_element=wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[1]).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Colina")]')))).perform()
-    action.click(on_element= wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Confirmar"]')))).perform()
+    action.click(wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[1]).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Colina")]')))).perform()
+    action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Confirmar"]')))).perform()
     sleep(random.uniform(2,3))
-    action.click(on_element= wait.until(EC.presence_of_element_located((By.XPATH, '//div[text()="Sub-categoría"]')))).perform()
+    action.click( wait.until(EC.presence_of_element_located((By.XPATH, '//div[text()="Sub-categoría"]')))).perform()
     sleep(random.uniform(2,3))
-    action.click(on_element= wait.until(EC.presence_of_element_located((By.ID, 'category-3-ginebra')))).perform()
+    action.click( wait.until(EC.presence_of_element_located((By.ID, 'category-3-ginebra')))).perform()
     sleep(random.uniform(2,3))
     for _ in range(4):
         driver.execute_script("window.scrollBy(0, 500);")
@@ -313,10 +317,10 @@ if __name__ == "__main__":
     
    # Concat DataFrames
     pd.set_option('display.max_rows', None)
+    
     df_full = pd.concat([df_1, df_2, df_3, df_4, df_5], axis=0, ignore_index=True)
-    df_full['Precio'] = df_full['Precio'].astype('str') \
-                                         .str.extractall('(\d+)') \
-                                         .unstack().sum(axis=1).astype(float)
+    
+    df_full['Precio'] = pd.to_numeric(df_full['Precio'].str.replace('[.$]', '', regex=True), downcast='float')
 
     df_sale = df_full.query('Descuento.notnull()') \
                     .sort_values(['Store','Precio'], ascending=[True, False]) \
