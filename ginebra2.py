@@ -93,7 +93,7 @@ def jumbo_extract(driver):
     
     df = pd.DataFrame(main_list)
     df = df.drop_duplicates()
-    df['Descuento'] = df['Descuento'].str.replace(' ', '', regex=True)
+    df['Descuento'] = df['Descuento'].apply(lambda x: x.replace(' ', '') if not pd.isna(x) else float('nan'))
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.quit()
     return df
@@ -118,11 +118,12 @@ def olimpica_extract(driver):
     wait.until(EC.element_to_be_clickable((By.XPATH, '//label[text()="Ginebra"]'))).click()
     sleep(random.uniform(2.0, 3.5))
 
-    for _ in range(5):
+    for _ in range(3):
         driver.execute_script("window.scrollBy(0, 400);")
         sleep(random.uniform(2, 2.5))
     main_box = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'vtex-search-result-3-x-galleryItem')))
     
+    sleep(random.uniform(2.0, 3.5))
     main_list = []
     for detail in main_box:  
         nombre = detail.find_element(By.CLASS_NAME,  'vtex-product-summary-2-x-productBrand').text
@@ -213,7 +214,7 @@ def carulla_extract(driver):
         nombre = detail.find_element(By.CLASS_NAME, "vtex-product-summary-2-x-productBrand").text 
       
         precio_element =  detail.find_elements(By.CLASS_NAME, "exito-vtex-components-4-x-currencyContainer")
-        if len(precio_element) == 3:
+        if len(precio_element) > 2 :
             precio = precio_element[2].text
         else:
             precio = precio_element[1].text
@@ -225,7 +226,7 @@ def carulla_extract(driver):
         main_list.append({'Nombre': nombre, 'Descuento': descuento, 'Precio':precio, 'Store': 'Carulla'})       
     
     df = pd.DataFrame(main_list)
-    df['Descuento'] = df['Descuento'].apply(lambda x: (x.str[0] + x.str[1:]) if not pd.isna(x) else float('nan'))
+    df['Descuento'] = df['Descuento'].apply(lambda x: x.replace(' ', '') if not pd.isna(x) else float('nan'))
     print(f'{len(df)} {df.Store[0]} items was extracted')
     driver.quit()
     return df
@@ -247,11 +248,11 @@ def exito_extract(driver):
     action.click(wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "css-yiuvdt")))[1]).perform()
     action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Colina")]')))).perform()
     action.click( wait.until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Confirmar"]')))).perform()
-    sleep(random.uniform(2,3))
+    sleep(random.uniform(3.5,4))
     action.click( wait.until(EC.presence_of_element_located((By.XPATH, '//div[text()="Sub-categoría"]')))).perform()
-    sleep(random.uniform(2,3))
+    sleep(random.uniform(3.5,4))
     action.click( wait.until(EC.presence_of_element_located((By.ID, 'category-3-ginebra')))).perform()
-    sleep(random.uniform(2,3))
+    sleep(random.uniform(4, 5))
     for _ in range(4):
         driver.execute_script("window.scrollBy(0, 500);")
         sleep(random.uniform(2, 3))
@@ -285,12 +286,13 @@ def exito_extract(driver):
      
     df = pd.DataFrame(main_list)
     print(f'{len(df)} {df.Store[0]} items was extracted')
-    df['Descuento'] = df['Descuento'] = df['Descuento'].str.replace(' ', '', regex=True)
+    df['Descuento'] = df['Descuento'].apply(lambda x: x.replace(' ', '') if not pd.isna(x) else float('nan'))
     driver.quit() 
     return df
     
 if __name__ == "__main__":
- 
+    email_receiver = sys.argv[1]
+    
     # Jumbo Retail
     driver = get_driver()
     df_1 = jumbo_extract(driver)
@@ -325,7 +327,6 @@ if __name__ == "__main__":
     # Send Email
     email_sender = os.environ.get("EMAIL")
     email_password = os.environ.get("PASSWORD")
-    email_receiver = 'nicolasbenavides@icloud.com'
 
     msg = MIMEMultipart()
     msg['Subject'] = "Test Gin Discount Notificaton"
